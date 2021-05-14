@@ -10,7 +10,7 @@ const Layout = ({ location, title, children }) => {
   if (isRootPath) {
     header = (
       <h1 className="main-heading">
-        <StaticImage src="../images/developer.svg" alt="Profile picture" />
+        <StaticImage src="../images/dev-3.svg" alt="Profile picture" />
         <Link to="/">{title}</Link>
       </h1>
     )
