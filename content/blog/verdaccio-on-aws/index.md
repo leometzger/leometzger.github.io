@@ -71,7 +71,8 @@ A criação do bucket pode ser feito através da CLI da aws ou
 através da interface. Utilizando a CLI, utilizamos o seguinte comando:
 
 ```bash
-aws s3 mb verdaccio-storage
+# Substitua {company} pelo nome da empresa
+aws s3 mb s3://verdaccio-storage-{company}
 ```
 
 #### Criar uma imagem Docker do verdaccio
@@ -104,6 +105,8 @@ repositório de imagens Docker na AWS.
 Nesse caso também é possível usar a CLI ou a interface, fica
 a critério de afinidade em como fazer essa criação.
 
+**É importante copiar o campo "repositoryUri"**
+
 ```bash
 aws ecr create-repository --repository-name verdaccio-docker
 ```
@@ -112,17 +115,77 @@ O passo seguinte é adicionar a tag com o caminho do repositório
 para nossa imagem docker. (subistitua a URL do repositório que foi criado).
 
 ```bash
-docker tag verdaccio-with-s3:latest [URL Repositório ECR]/verdaccio-with-s3:latest
+docker tag verdaccio-with-s3:latest [repositoryUri]/verdaccio-with-s3:latest
 ```
 
 Depois de criado o repositório, podemos fazer deploy
-da imagem
+da imagem. Para isso, precisamos também fazer login na AWS
+
+```bash
+aws ecr get-login-password \
+    --region <region> \
+| docker login \
+    --username AWS \
+    --password-stdin <aws_account_id>.dkr.ecr.<region>.amazonaws.com
+```
 
 ```bash
 docker push  [URL Repositório ECR]/verdaccio-with-s3:latest
 ```
 
 #### Criação da task definition
+
+Após a imagem estar publicada no nosso ECR e o Bucket
+no S3 criado, e hora de criar nosso cluster e nossa
+task definition para ser rodada pelo Fargate.
+
+Para criar o cluster, usamos o seguinte comando:
+
+```bash
+aws ecs create-cluster --cluster-name verdaccio-cluster
+```
+
+Dessa maneira temos o cluster criado. Depois disso, é necessário
+criar uma definição de task para ser rodada como serviço pelo Fargate.
+A definição da tarefa é feita por um JSON com as infromações necessárias
+para rodar.
+
+```json
+{
+  "family": "verdaccio-fargate",
+  "networkMode": "awsvpc",
+  "containerDefinitions": [
+    {
+      "name": "verdaccio",
+      "image": "verdaccio-with-s3",
+      "portMappings": [
+        {
+          "containerPort": 4873,
+          "hostPort": 4873,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true
+    }
+  ],
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512"
+}
+```
+
+Essa definição cria uma Task que exige 0.25vCPU e 512MB de memória RAM. Caso
+você sinta necessidade, ou o verdaccio ficar lento,
+esses parâmetros podem ser aumentados.
+
+Nessa definição, também é indicada um port mapping, da porta 4873 para a porta
+do container 4873 que é a porta que o verdaccio expõe sua API.
+
+Tendo isso, o comando que cria a task é:
+
+```bash
+aws ecs register-task-definition --cli-input-json ./fargate-task.json
+```
 
 #### Rodando a task como um serviço
 
