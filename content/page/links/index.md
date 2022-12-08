@@ -1,20 +1,25 @@
 ---
 title: Links
+description: Outros lugares onde você consegue me encontrar
+readingTime: false
+showDate: false
+comments: false
 links:
-  - title: GitHub
-    description: GitHub is the world's largest software development platform.
-    website: https://github.com/leometzger
-    image: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
+  - title: Linkedin
+    website: https://linkedin.com/in/leonardo-metzger-51b371104/
+    image: linkedin.png
 
   - title: GitHub
-    description: GitHub is the world's largest software development platform.
     website: https://github.com/leometzger
-    image: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
+    image: github.png
+
+  - title: Instagram
+    website: https://instagram.com/leometzger
+    image: instagram.png
+
 menu:
   main:
     weight: 4
     params:
       icon: link
-
-comments: false
 ---
