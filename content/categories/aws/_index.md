@@ -1,7 +1,7 @@
 ---
 title: Aws
 description: Serviços AWS e conteúdos relacionados
-image:
+image: aws.png
 
 style:
   background: "#d2934c"
