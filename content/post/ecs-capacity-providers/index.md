@@ -5,6 +5,7 @@ slug: ecs-capacity-providers
 date: 2022-12-10 00:00:00+0000
 draft: false
 comments: false
+image: cover.jpeg
 categories:
   - Aws
 tags:
