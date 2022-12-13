@@ -25,7 +25,7 @@ Dentro do contexto do ECS é importante conhecer bem a definição dos seus prin
 
 - **Containers & Images**: As imagens dos containers são os componentes ou serviços que a aplicação precisa rodar em algum ambiente. Essas imagens precisam estar hospedadas em algum docker registry (Docker hub, ECR, Etc.);
 - **Cluster**: É um agrupamento lógico de serviços e tarefas. Esse agrupamento serve para isolar os containers da aplicação. A infraestrutura que o cluster gerencia (seja serverless ou não) é responsável por botar os containers para rodar;
-- **Tasks Definition**: É a especificação de um components composto por um ou mais containers que fazem parte da sua aplicação;
+- **Tasks Definition**: É a especificação de um componente composto por um ou mais containers que fazem parte da sua aplicação;
 - **Task**: É uma instância de uma task definition que devem ser rodadas pelo _cluster_. Fazendo uma analogia com POO, a _task definition_ é uma classe enquanto a task é um objeto;
 - **Services**: Serviços são as tasks da aplicação que devem rodar continuamente, como uma API ou uma web application. Quando parados por algum motivo como erro ou algo do tipo eles são automaticamente iniciadas novamente pelo ECS.
 
@@ -33,7 +33,7 @@ Tá, e onde entram os capacity providers nesse esquema? Primeiro, temos que ente
 
 ## Como funcionam os capacity providers?
 
-_Capacity provider_ a grosso modo é uma especificação de provisionamento da infraestrutura do cluster. Como o próprio nome sugere é a definição de como vai ser criada a capacidade computacional que um cluster precisa para rodar as _Tasks_ e _Services_. Um cluster pode ter um ou mais de um _capacity provider_ e utilizá-los da meneira que atender melhor os objetivos da aplicação. (Vai ficar mais claro ao ver as estratégias de utilização dos capacity providers)
+_Capacity provider_ a grosso modo é uma especificação de provisionamento da infraestrutura do cluster. Como o próprio nome sugere é a definição de como será criada a capacidade computacional que um cluster precisa para rodar as _Tasks_ e _Services_. Um cluster pode ter um ou mais de um _capacity provider_ e utilizá-los da meneira que atender melhor os objetivos da aplicação. (Vai ficar mais claro ao ver as estratégias de utilização dos capacity providers)
 
 Quando você está criando um _capacity provider_, tem a opção de escolher um capacity provider Fargate ou EC2.
 
@@ -51,11 +51,11 @@ Com ele basta especificar a quantidade de memória e vCPU que a task ou serviço
 
 ### (Fargate | EC2) Spots
 
-Em ambos os modelos, caso seja de interesse buscar uma economia de custos é possível utilizar a versão Spot (EC2 Spot ou Fargate Spot).
+Em ambos os modelos, caso seja de interesse buscar uma economia de custos, é possível utilizar a versão Spot (EC2 Spot ou Fargate Spot).
 
-A ideia do modelo _Spot_ tem a mesma ideia para as instâncias EC2 e para o Fargate. A aplicação/instância não tem garantia de continuidade da alocação dos recursos. Em determinado momento a instância ou capacidade computacional no caso do fargate pode ser requerido por outra conta e sua aplicação perder acesso aquele recurso.
+O modelo _Spot_ tem a mesma ideia para as instâncias EC2 e para o Fargate. A aplicação/instância não tem garantia de continuidade da alocação dos recursos. Em determinado momento a instância - ou capacidade computacional no caso do fargate - pode ser requerido por outra conta e sua aplicação perder acesso aquele recurso.
 
-Porém, na prática isso não acontece tão frequentemente a ponto de ser uma preocupação para as aplicações que não tem criticidade em relação a isso.
+Isso com certeza deve ser levado em conta e deve ser tratado, porém, na prática isso não acontece tão frequentemente a ponto de ser uma preocupação para as aplicações que não tem criticidade em relação a isso.
 
 Uma coisa que é muito recomendado quando utiliza spot para as instâncias EC2 é que sejam selecionadas várias famílias de instâncias. Quanto mais famílias forem utilizadas, menor a chance de se ter uma interrupção do serviço que está rodando nesse modelo.
 
