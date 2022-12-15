@@ -64,7 +64,7 @@ src = ""
 
 [colorScheme]
 toggle = true
-default = "dark"
+default = "light"
 
 [imageProcessing.cover]
 enabled = true

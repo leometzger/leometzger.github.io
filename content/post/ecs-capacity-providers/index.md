@@ -80,13 +80,13 @@ Ao definir uma estratégia de _capacity providers_ você tem que escolher qual o
 
 Considere uma estratégia que tenha 2 _capacity providers_ (CP1 e CP2) onde:
 
-- CP1 tenha base 1 e weight 1
+- CP1 tenha base 2 e weight 1
 - CP2 tenha base 0 e weigth 1
 
 Nesse cenário ao mandar rodar 6 tasks, as tasks serão provisionadas da seguinte forma:
 
 - CP1: 4 tasks (task 1, 2, 4, 6)
-- CP2: 3 tasks (task 3, 5, 7)
+- CP2: 3 tasks (task 3, 5)
 
 Ou seja, o peso é considerado depois que a base já foi preenchida e em caso de pesos iguais a ordem dos providers importa.
 

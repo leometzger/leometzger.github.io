@@ -1,5 +1,5 @@
 ---
-title: Otimização da entrega de imagens usando CloudFront com base no userAgent
+title: Otimização da entrega de imagens usando CloudFront com base no dispositivo do usuário
 description: Aprenda como entregar imagens mais otimizadas para os dispositivos do usuário utilizando CloudFront Functions
 slug: cloudfront-function-image-sizes
 date: 2022-12-17 00:00:00+0000
@@ -27,7 +27,7 @@ Casos de uso comuns para a utilização do Cloufront functions são:
 - Manipulação de cabeçalhos;
 - Autorização de acesso.
 
-### Diferença em relação à Lambda@edge
+### Diferença em relaç  ão à Lambda@edge
 
 O Cloudfront também tem uma funcionalidade parecida que se chama **Lambda@edge**. A Lambda@edge foi criada em 2017, alguns anos antes que a Lambda Functions. As 2 funcionalidades são diferentes e tem casos de uso diferentes também, por isso é importante saber quando se utiliza uma ou a outra.
 
@@ -35,7 +35,7 @@ As pricipais diferenças entre as 2 funcionalides são as seguintes:
 
 | -           | Cloudfront Function          | Lambda@Edge                   |
 | ----------- | ---------------------------- | ----------------------------- |
-| Runtime     | Apenas JS                    | Javastript e Python           |
+| Runtime     | Apenas JS                    | Javascript e Python           |
 | Computação  | Baseada em processo          | Baseada em VM                 |
 | Performance | Alta escala e Baixa latência | Milhares de req/s             |
 | Localização | Edge (218+) lugares          | Edge regional (13)            |
