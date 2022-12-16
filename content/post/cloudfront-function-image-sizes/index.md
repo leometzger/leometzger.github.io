@@ -1,8 +1,8 @@
 ---
-title: Otimização da entrega de imagens usando CloudFront com base no dispositivo do usuário
+title: Como otimizar a entrega de imagens usando CloudFront Functions
 description: Aprenda como entregar imagens mais otimizadas para os dispositivos do usuário utilizando CloudFront Functions
 slug: cloudfront-function-image-sizes
-date: 2022-12-17 00:00:00+0000
+date: 2022-12-16 00:00:00+0000
 draft: false
 comments: false
 image: cover.svg
@@ -14,24 +14,24 @@ tags:
   - Content Delivery
 ---
 
-Se suas aplicações não são API-only e possue uma interface web, seguramente você utiliza direta ou indiretamente algum CDN para distribuir arquivos para o navegador. Na AWS temos disponível um serviço gerenciado de CDN chamado **Cloudfront** e uma das funcionalidades que esse serviço é o **Cloudfront Function**. Essa funcionalidade é bastante útil e nesse post vou mostrar como implementar uma otimização de entrega de imagens para sua aplicação utilizando essa funcionalidade do Cloudfront.
+Se suas aplicações não são API-only e possuem uma interface web, seguramente você utiliza direta ou indiretamente algum CDN para distribuir arquivos para o navegador. Na AWS o serviço gerenciado de CDN é chamado **Cloudfront** e uma das funcionalidades que esse serviço tem, e que é tópico desse post, é a **Cloudfront Function**. Essa funcionalidade é bastante útil, nesse post vou mostrar como implementar uma otimização de entrega de imagens para sua aplicação utilizando ela.
 
 ## O que são Cloudfront Functions?
 
-Cloudfront Function é uma funcionalidade do Cloudfront que permite executar funções javascript leves nas _edge locations_. Através dessa função é possível manilupar aspectos da requisição e resposta do Cloudfront como adicionar headers e trocar a URI. E ela faz isso de maneira bastante performática (tem alta escala e baixa latência) por ser apenas uma função js leve.
+Cloudfront Function permite executar funções javascript leves nas _edge locations_ do CDN. Através dessa função é possível manilupar aspectos da requisição e resposta do Cloudfront como adicionar headers, trocar a URI e etc. Ela faz isso de maneira bastante performática (tem alta escala e baixa latência) por ser apenas uma função js leve.
 
-Casos de uso comuns para a utilização do Cloufront functions são:
+Casos de uso comuns para a utilização das **Cloufront functions** são:
 
 - Manipulação e normalização das chaves do cache;
-- Rewrite e redirect de URLs;
+- **Rewrite e redirect de URLs**;
 - Manipulação de cabeçalhos;
 - Autorização de acesso.
 
-### Diferença em relaç  ão à Lambda@edge
+### Diferença em relação à Lambda@edge
 
-O Cloudfront também tem uma funcionalidade parecida que se chama **Lambda@edge**. A Lambda@edge foi criada em 2017, alguns anos antes que a Lambda Functions. As 2 funcionalidades são diferentes e tem casos de uso diferentes também, por isso é importante saber quando se utiliza uma ou a outra.
+O Cloudfront também tem uma funcionalidade parecida que se chama Lambda@edge. A Lambda@edge foi criada em 2017, alguns anos antes que as Cloudfront Functions. As 2 funcionalidades são diferentes e tem casos de uso diferentes, por isso é importante conhecer quando utilizar uma ou outra.
 
-As pricipais diferenças entre as 2 funcionalides são as seguintes:
+As pricipais diferenças entre essas 2 funcionalides são as seguintes:
 
 | -           | Cloudfront Function          | Lambda@Edge                   |
 | ----------- | ---------------------------- | ----------------------------- |
@@ -42,21 +42,21 @@ As pricipais diferenças entre as 2 funcionalides são as seguintes:
 | Acessos     | Nenhum                       | Serviços aws, filesystem, etc |
 | Req. Body   | Não                          | Sim                           |
 
-Vendo essa tabela fica mais claro quando usamos uma ou outra. No caso usaremos o _cloudfront function_ quando queremos alguma manipulação simples de URI, header ou algum aspecto dessa parte da requisição e usaremos Lambda@edge quando precisarmos fazer algo mais elaborado e precisarmos acessar o body da requisição ou então outros serviços da AWS.
+Essa tabela pode ser usada de referência para escolher entre elas. Em resumo, usamos _cloudfront function_ quando queremos alguma manipulação simples de URI, header ou algum aspecto dessa parte da requisição e usaremos Lambda@edge quando precisarmos fazer algo mais elaborado e precisarmos acessar o body da requisição ou então precisa acessar outros serviços da AWS.
 
-Vale ressaltar que as 2 podem ser utilizadas em conjunto, nada impede esse caso de uso.
+Vale ressaltar que as 2 podem ser utilizadas em conjunto também, nada impede esse caso de uso. **Como a Lambda@edge roda no regional cache ela é invocada após a _cloudfront function_**.
 
 ## Otimizando a entrega de imagens
 
-Considerando a funcionalidade apresentada, uma otimização que pode ser feita no seu ambiente é retornar diferentes tamanhos e resoluções de imagens com base no dispositivo do usuário. Ou seja, entregar imagens otimizadas para celular, desktop ou tablet utilizando as _Cloudfront functions_. Isso permite que você tenha uma redução de custos e melhorea a experiência do usuário.
+Considerando a funcionalidade apresentada, uma possível otimização no seu ambiente é retornar diferentes tamanhos e resoluções de imagens com base no dispositivo que o usuário está acessando a aplicação. Ou seja, entregar imagens otimizadas para celular, desktop ou tablet utilizando as _Cloudfront functions_, sem a necessidade de adicionar lógica na aplicação . Isso permite que você tenha uma eventual redução de custos e melhore a experiência do usuário.
 
 Vamos pensar no seguinte cenário, você tem um portal que tem várias imagens de fundo e imagens. Nesse cenário você quer entregar as imagens sempre em tamanho otimizado para o dispositivo. Em desktops você não quer que a imagem fique pixelada e em mobile você não quer que consuma muita rede e transferência de dados do cloudfront. Para não precisar tratar dentro da aplicação, é possível criar uma função que faça isso na edge location reescrevendo a URI redirecionando para a imagem correta.
 
-A função do cloudfront function associada com sua distribuição poderia ser escrita da seguinte forma:
+A função do _cloudfront function_ associada com sua distribuição poderia ser escrita da seguinte forma:
 
 {{< gist leometzger 43afab26cf57f6e7d239e01042f5837c >}}
 
-Com esse exemplo de código, caso o dispositivo (user-agent) do usuário seja mobile, a função irá reescrever a URI para adicionar `_mobile` no nome da imagem. **É importante que se tenha um processo na hora de salvar na origem do cloudfront para suportar essa funcionalidade.**
+Com esse exemplo de código, caso o dispositivo (user-agent) do usuário seja mobile (Android, Iphone, etc.), a função irá reescrever a URI para adicionar `_mobile` no nome da imagem e retornar a imagem em um tamanho mais apropriado. **É importante que se tenha um processo na hora de salvar na origem do cloudfront para suportar essa funcionalidade, para que existam as diferentes imagens.**
 
 ![Comportamento utilizando a CF Function](example-function.png "Exemplo visual gerado")
 
