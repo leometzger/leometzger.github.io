@@ -14,7 +14,7 @@ tags:
   - Content Delivery
 ---
 
-Se suas aplicações não são API-only e possuem uma interface web, seguramente você utiliza direta ou indiretamente algum CDN para distribuir arquivos para o navegador. Na AWS o serviço gerenciado de CDN é chamado **Cloudfront** e uma das funcionalidades que esse serviço tem - e que é tópico desse post - é **Cloudfront Function**. Essa funcionalidade é bastante útil, nesse post vou mostrar como implementar uma otimização de entrega de imagens para sua aplicação utilizando ela.
+Se suas aplicações não são API-only e possuem uma interface web, seguramente você utiliza direta ou indiretamente algum _Content Delivery Network_ (CDN) para distribuir arquivos para o navegador. Na AWS o serviço gerenciado de CDN é chamado **Cloudfront** e uma das funcionalidades que esse serviço tem - e que é tópico desse post - é **Cloudfront Function**. Essa funcionalidade é bastante útil, nesse post vou mostrar como implementar uma otimização de entrega de imagens para sua aplicação utilizando ela.
 
 ## O que são Cloudfront Functions?
 
