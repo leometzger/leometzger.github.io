@@ -1,10 +1,11 @@
 ---
-title: Criando um npm registry privado na AWS
-description: "Hospedando verdaccio na AWS utilizando ECS Fargate e S3."
+title: Como criar um npm registry privado na AWS
+description: "Hospedando verdaccio na AWS utilizando ECS e S3."
 slug: verdaccio-on-aws
-date: 2023-01-05 00:00:00+0000
+date: 2023-02-21 00:00:00+0000
 draft: true
 comments: false
+image: cover.png
 categories:
   - Aws
   - Frontend
@@ -14,7 +15,7 @@ tags:
 ---
 
 Neste post vou mostrar como hospedar um **npm registry privado**
-na AWS, para que serve ter um registry desse tipo e como utilizá-lo.
+na AWS, explicar para que serve ter um registry desse tipo e como utilizá-lo.
 
 ## NPM Registry
 
@@ -23,33 +24,31 @@ Quando estamos desenvolvendo sistemas utilizando ferramentas do ecossistema Java
 
 Em casos onde o pacote pode ser distribuído publicamente o
 [https://www.npmjs.com/](https://www.npmjs.com/) é uma opção excelente.
-Já em casos onde precisamos publicar o pacote de maneira privada, o
-npmjs acaba ficando menos atrativo, principalmente pelo preço ($7 por usuário).
+Já em casos onde precisamos publicar o pacote de maneira privada, para que seja visto
+somente pela empresa que o código pertence, o npmjs acaba ficando menos atrativo
+por conta do preço ($7 por usuário).
 
-Um dos principais motivos para buscar um NPM registry próprio e privado
+O principal motivo para buscar um NPM registry próprio e privado
 é para publicar e distribuir pacotes privados de domínio da empresa.
-
-Além disso, um registry privado também pode ajudar em m alguns outros
+Mas, para além disso, um registry privado também pode servir para outros
 casos de uso, como:
 
-- Testes end to end (e2e);
-- Caching de pacotes;
-- Customização de pacotes.
+- Testes end to end (e2e) de pacotes;
+- Caching de pacotes públicos;
+- Customização de pacotes utilizados.
 
-Então, como faz para criar um NPM registry privado?
-
-![Packages Illustration](./packages.png)
+Então, e como faz para criar um NPM registry privado?
 
 ## Verdaccio
 
 [Verdaccio](https://verdaccio.org/) é um proxy e registry privado Open Source.
-O verdaccio fornece uma CLI que roda o registry privado. Além da CLI com as APIs
-de armazenamento e gerenciamento dos pacotes, ele também fornece uma interface WEB
+O verdaccio fornece uma CLI que roda o registry privado. Além da CLI, ele também
+fornece as APIs de armazenamento e gerenciamento dos pacotes, uma interface WEB
 e uma série de plugins que podem ser utilizados para adequar melhor a solução
-para cada caso.
+para cada caso de uso.
 
-Neste post, vamos utilizar o Verdaccio com o
-[plugin de armazenamento do S3 da Amazon.](https://github.com/verdaccio/verdaccio/tree/master/packages/plugins/aws-storage)
+Neste post, vamos utilizar o Verdaccio em conjunto com o
+[plugin de armazenamento no S3 da Amazon.](https://github.com/verdaccio/verdaccio/tree/master/packages/plugins/aws-storage).
 
 Adicionar o registry online é útil quando o time está distribuído e
 precisa que este registry esteja acessível pela internet ou em uma rede privada.
@@ -67,7 +66,8 @@ Os seguintes passos vão ser implementados:
 
 ### Pré-requisitos
 
-- Configurar [aws cli](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html).
+- Ter configurado a [aws cli](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html);
+- Conhecer docker.
 
 ### Criar um bucket no S3
 
@@ -78,7 +78,7 @@ dos pacotes contendo o conteúdo de distribuição (package.json e tarball do pa
 A criação do bucket pode ser feito através da CLI da aws ou
 através da interface. Utilizando a CLI, utilizamos o seguinte comando:
 
-```bash
+```sh
 # Substitua {company} pelo nome da sua empresa
 aws s3 mb s3://verdaccio-storage-{company}
 ```
@@ -90,20 +90,58 @@ nome da empresa ou seu nome.
 
 Para o plugin do **verdaccio** funcionar, é necessário criar uma imagem
 do verdaccio que contenha o plugin de storage instalado.
-Essa imagem vai ser utilizada para fazer deploy no ECS Fargate.
+Essa imagem vai ser utilizada para fazer deploy no ECS. A imagem pode
+ser construida em 2 passos como demonstrado a seguir:
+
+1. Criação do arquivo (config.yaml) de configuração do verdaccio para utilizar o plugin:
+
+```yaml
+storage: /verdaccio/storage/data
+
+store:
+  aws-s3-storage:
+    bucket: verdaccio-storage-lm
+    region: us-east-1
+    ## !! São parâmetros opcionais, não usar em ambiente de produção !!
+    ## !! Em ambientes de produção, usar roles na AWS
+    accessKeyId: # Sua access key
+    secretAccessKey: # Seu secret
+
+web:
+  title: Sua empresa Proxy Registry
+
+uplinks:
+  npmjs:
+    url: https://registry.npmjs.org/
+
+packages:
+  "**":
+    access: $all
+    publish: $all
+    # if package is not available locally, proxy requests to 'npmjs' registry
+    proxy: npmjs
+
+server:
+  keepAliveTimeout: 60
+
+logs: { type: stdout, format: pretty, level: http }
+```
+
+2. Criação da imagem do docker que vai ser utilizada no deploy:
 
 ```Dockerfile
-FROM verdaccio/verdaccio
+FROM verdaccio/verdaccio:5
 
+ADD config.yaml /verdaccio/conf/config.yaml
 USER root
 ENV NODE_ENV=production
-RUN npm i && npm install verdaccio-s3-storage
+RUN npm install --global verdaccio-s3-storage
 USER verdaccio
 ```
 
 Depois de criar o **Dockerfile**, precisamos fazer build da imagem.
 
-```bash
+```sh
 docker build . -t verdaccio-with-s3
 ```
 
@@ -118,14 +156,15 @@ a critério de afinidade em como fazer essa criação.
 
 **É importante copiar o campo "repositoryUri" do output**
 
-```bash
+```sh
 aws ecr create-repository --repository-name verdaccio-with-s3
 ```
 
 O passo seguinte é adicionar a tag com o caminho do repositório
 para nossa imagem docker. (subistitua a URL do repositório que foi criado).
+**Use a URL do repositório que foi criado no passo anterior**.
 
-```bash
+```sh
 docker tag verdaccio-with-s3:latest [aws_account_id].dkr.ecr.us-east-1.amazonaws.com/verdaccio-with-s3:latest
 ```
 
@@ -135,12 +174,11 @@ feito com os seguintes comandos:
 
 **Não esqueça de substituir a região e sua aws_account_id** e a região se necessário
 
-```bash
-aws ecr get-login-password --region us-east-1 |
-  docker login --username AWS --password-stdin [aws_account_id].dkr.ecr.us-east-1.amazonaws.com
+```sh
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin [aws_account_id].dkr.ecr.us-east-1.amazonaws.com
 ```
 
-```bash
+```sh
 docker push [aws_account_id].dkr.ecr.us-east-1.amazonaws.com/verdaccio-with-s3:latest
 ```
 
@@ -152,54 +190,90 @@ nosso cluster e nossa task definition para ser rodada pelo ECS Fargate.
 
 Para criar o cluster no Fargate, usamos o seguinte comando:
 
-```bash
+```sh
 aws ecs create-cluster --cluster-name verdaccio-cluster
 ```
 
-Com o cluster criado, o próximo passo é criar uma definição de task para ser rodada como um serviço pelo Fargate.
-A definição da tarefa é feita utilizando um arquivo JSON com as infromações necessárias
-para rodar.
+Para conseguir criar a definição de task no ECS, é necessário antes criar uma role com policies
+que permitam que essa task tenha acesso a imagem que adicionamos ao ECR. Os comandos a seguir
+fazem com que seja criada a role para ser utilizada pela task.
 
-O arquivo deve conter a seguinte configuração.
+Criação do arquivo (**iam-assume-policy.json**) da política de utilização da Role:
 
 ```json
 {
-  "family": "verdaccio-fargate",
-  "networkMode": "awsvpc",
-  "containerDefinitions": [
+  "Version": "2012-10-17",
+  "Statement": [
     {
-      "name": "verdaccio",
-      "image": "verdaccio-with-s3:latest",
-      "portMappings": [
-        {
-          "containerPort": 4873,
-          "hostPort": 4873,
-          "protocol": "tcp"
-        }
-      ],
-      "essential": true
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ecs.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
     }
-  ],
-  "requiresCompatibilities": ["FARGATE"],
-  "cpu": "256",
-  "memory": "512"
+  ]
 }
 ```
 
-Essa definição cria uma Task que exige 0.25vCPU e 512MB de memória RAM. Caso
-você sinta necessidade, ou o verdaccio ficar lento, esses parâmetros podem ser alterados
-para atender sua necessidade.
+Criação da role (lembre-se de copiar o ARN para adicionar no arquivo da task):
 
-Nessa definição, também é indicada um port mapping, da porta 4873 para a porta
-do container 4873 que é a porta que o verdaccio expõe sua API.
+```bash
+aws iam create-role --role-name verdaccio-task --assume-role-policy-document file://iam-assume-policy.json
+```
+
+Necessário associar a policy para dar permissão de acessar os recursos do ECR. No exemplo, para fins de demonstração
+estou usando uma policy mais permissiva, porém em ambientes de produção deve-se utilizar o princípio de
+menos privilégio possível, atribuindo somente o necessário ou criando uma policy específica para a task.
+
+```sh
+aws iam attach-role-policy --role-name verdaccio-task --policy-arn arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess
+```
+
+Com o cluster e role criados, o próximo passo é criar uma definição de task para ser rodada como um serviço pelo Fargate.
+A definição da tarefa é feita utilizando um arquivo JSON com as infromações necessárias
+para rodar.
+
+O arquivo deve conter a seguinte configuração. (Lembre-se de substituir a account_id e se necessário a região também)
+
+```yaml
+# ecs-task.yaml
+family: verdaccio-service-task
+executionRoleArn: "arn:aws:iam::[aws_account_id]:role/verdaccio-task"
+networkMode: awsvpc
+containerDefinitions:
+  - name: verdaccio
+    image: [aws_account_id].dkr.ecr.us-east-1.amazonaws.com/verdaccio-with-s3:latest
+    cpu: 512
+    memory: 1024
+    portMappings:
+      - containerPort: 4873
+        hostPort: 4873
+        protocol: tcp
+requiresCompatibilities:
+  - EC2
+  - FARGATE
+cpu: "512"
+memory: "1024"
+runtimePlatform:
+  cpuArchitecture: ARM64
+  operatingSystemFamily: LINUX
+```
+
+Essa definição cria uma Task que exige 0.5vCPU e 1GB de memória RAM. Caso
+você sinta necessidade, ou o verdaccio ficar lento, esses parâmetros podem ser alterados
+para escalar e atender melhor sua necessidade.
+
+Nessa definição, também é indicado um port mapping, da porta 4873 para a porta
+do container 4873 que é a porta padrão que o verdaccio expõe sua API. Também é possível
+alterar para outra porta caso seja de interesse, como por exemplo 80/443.
 
 Tendo isso, o comando que registra a task é:
 
-```bash
-aws ecs register-task-definition --cli-input-json ./fargate-task.json
+```sh
+aws ecs register-task-definition --cli-input-yaml file://ecs-task.yaml
 ```
 
-#### Rodando a task como um serviço
+#### Criando o serviço do verdaccio usando a task
 
 ## Utilizando o registry privado
 
@@ -209,7 +283,7 @@ e publicá-lo.
 
 Para criar o pacote vamos utilizar os seguintes comandos:
 
-```bash
+```sh
 mkdir my-pkg
 cd my-pkg
 npm init -y
@@ -220,14 +294,24 @@ npm init -y
 Vamos alterar o nome do pacote para ele casar com a
 configuração verdaccio.
 
-```bash
+```sh
 // Alterar o arquivo .npmrc para configurar o proxy
 ```
 
-#### Publicando um pacote
+### Publicando um pacote
 
 ```bash
 npm publish
 ```
 
 ## Conclusão
+
+Criar uma instância do verdaccio manualmente utilizando ECS é um tanto trabalhoso. Porém algumas vezes atende
+a demanda. O proxy com certeza é muito útil em diversos casos de uso.
+
+Em um futuro próximo vou publicar um projeto em terraform para que o deploy seja simplificado
+e possa ser mais facilmente replicado.
+
+## Referências
+
+- https://verdaccio.org/
