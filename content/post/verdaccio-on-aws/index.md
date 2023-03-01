@@ -101,7 +101,7 @@ storage: /verdaccio/storage/data
 store:
   aws-s3-storage:
     bucket: verdaccio-storage-lm
-    region: us-east-1
+    region: [region]
     ## !! São parâmetros opcionais, não usar em ambiente de produção !!
     ## !! Em ambientes de produção, usar roles na AWS
     accessKeyId: # Sua access key
@@ -165,7 +165,7 @@ para nossa imagem docker. (subistitua a URL do repositório que foi criado).
 **Use a URL do repositório que foi criado no passo anterior**.
 
 ```sh
-docker tag verdaccio-with-s3:latest [aws_account_id].dkr.ecr.us-east-1.amazonaws.com/verdaccio-with-s3:latest
+docker tag verdaccio-with-s3:latest [aws_account_id].dkr.ecr.[region].amazonaws.com/verdaccio-with-s3:latest
 ```
 
 Depois de criado o repositório, podemos fazer deploy
@@ -175,11 +175,11 @@ feito com os seguintes comandos:
 **Não esqueça de substituir a região e sua aws_account_id** e a região se necessário
 
 ```sh
-aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin [aws_account_id].dkr.ecr.us-east-1.amazonaws.com
+aws ecr get-login-password --region [region] | docker login --username AWS --password-stdin [aws_account_id].dkr.ecr.[region].amazonaws.com
 ```
 
 ```sh
-docker push [aws_account_id].dkr.ecr.us-east-1.amazonaws.com/verdaccio-with-s3:latest
+docker push [aws_account_id].dkr.ecr.[region].amazonaws.com/verdaccio-with-s3:latest
 ```
 
 #### Criação da task definition
@@ -192,6 +192,26 @@ Para criar o cluster no Fargate, usamos o seguinte comando:
 
 ```sh
 aws ecs create-cluster --cluster-name verdaccio-cluster
+```
+
+ecr-pull-verdaccio-image-policy
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowPull",
+      "Effect": "Allow",
+      "Action": ["ecr:BatchGetImage", "ecr:GetDownloadUrlForLayer"],
+      "Resource": "arn:aws:ecr:[region]:[account_id]:repository/verdaccio-with-s3"
+    }
+  ]
+}
+```
+
+```bash
+aws iam create-policy --policy-name ECRPullVerdaccioImage --policy-document file://ecr-pull-verdaccio-image-policy.json
 ```
 
 Para conseguir criar a definição de task no ECS, é necessário antes criar uma role com policies
@@ -207,7 +227,7 @@ Criação do arquivo (**iam-assume-policy.json**) da política de utilização d
     {
       "Effect": "Allow",
       "Principal": {
-        "Service": "ecs.amazonaws.com"
+        "Service": "ecs-tasks.amazonaws.com"
       },
       "Action": "sts:AssumeRole"
     }
@@ -226,7 +246,7 @@ estou usando uma policy mais permissiva, porém em ambientes de produção deve-
 menos privilégio possível, atribuindo somente o necessário ou criando uma policy específica para a task.
 
 ```sh
-aws iam attach-role-policy --role-name verdaccio-task --policy-arn arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess
+aws iam attach-role-policy --role-name verdaccio-task --policy-arn arn:aws:iam::aws:policy/ECRPullVerdaccioImage
 ```
 
 Com o cluster e role criados, o próximo passo é criar uma definição de task para ser rodada como um serviço pelo Fargate.
@@ -242,7 +262,7 @@ executionRoleArn: "arn:aws:iam::[aws_account_id]:role/verdaccio-task"
 networkMode: awsvpc
 containerDefinitions:
   - name: verdaccio
-    image: [aws_account_id].dkr.ecr.us-east-1.amazonaws.com/verdaccio-with-s3:latest
+    image: [aws_account_id].dkr.ecr.[region].amazonaws.com/verdaccio-with-s3:latest
     cpu: 512
     memory: 1024
     portMappings:
@@ -274,6 +294,27 @@ aws ecs register-task-definition --cli-input-yaml file://ecs-task.yaml
 ```
 
 #### Criando o serviço do verdaccio usando a task
+
+Criar security group...
+
+```
+
+```
+
+```yaml
+cluster: "verdaccio-cluster"
+serviceName: "verdaccio-service"
+taskDefinition: "verdaccio-service-task"
+desiredCount: 1
+launchType: FARGATE
+networkConfiguration: # The network configuration for the service.
+  awsvpcConfiguration: # The VPC subnets and security groups that are associated with a task.
+    subnets: # [REQUIRED] The IDs of the subnets associated with the task or service.
+      - ""
+    securityGroups: # The IDs of the security groups associated with the task or service.
+      - ""
+    assignPublicIp: ENABLED
+```
 
 ## Utilizando o registry privado
 
