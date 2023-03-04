@@ -102,10 +102,6 @@ store:
   aws-s3-storage:
     bucket: verdaccio-storage-lm
     region: [region]
-    ## !! São parâmetros opcionais, não usar em ambiente de produção !!
-    ## !! Em ambientes de produção, usar roles na AWS
-    accessKeyId: # Sua access key
-    secretAccessKey: # Seu secret
 
 web:
   title: Sua empresa Proxy Registry
