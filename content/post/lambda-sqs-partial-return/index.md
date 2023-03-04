@@ -45,13 +45,13 @@ que deram problema.
 Um exemplo de implementação em Go segue uma estrutura semelhante a essa:
 
 ```go
+
+
 package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"log"
 	"math/rand"
 	"time"
 
@@ -59,16 +59,8 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 )
 
-type MessageFailure struct {
-	ItemIdentifier string `json:"itemIdentifier"`
-}
-
-type BatchItemFailures struct {
-	BatchItemFailures []MessageFailure `json:"batchItemFailures"`
-}
-
-func handler(ctx context.Context, event events.SQSEvent) (string, error) {
-	var failures BatchItemFailures
+func handler(ctx context.Context, event events.SQSEvent) (events.SQSEventResponse, error) {
+	failures := events.SQSEventResponse{}
 
 	for _, message := range event.Records {
 		// Simulação de um processamento
@@ -77,25 +69,16 @@ func handler(ctx context.Context, event events.SQSEvent) (string, error) {
 
 		if rand.Intn(10) < 2 {
 			fmt.Println("Failed", message.MessageId)
-
-			failure := MessageFailure{ItemIdentifier: message.MessageId}
-			failures.BatchItemFailures = append(
-				failures.BatchItemFailures,
-				failure,
-			)
+			failures.BatchItemFailures = append(failures.BatchItemFailures, events.SQSBatchItemFailure{
+				ItemIdentifier: message.MessageId,
+			})
 		}
 	}
 
-	response, err := json.Marshal(failures)
-	if err != nil {
-		log.Fatal("Error marshaling BatchItemFailures")
-	}
-
 	fmt.Println("Total failed", len(failures.BatchItemFailures))
-	fmt.Println("Response", string(response))
 
 	// Apenas as mensagens falhadas voltarão para a fila para serem reprocessadas
-	return string(response), nil
+	return failures, nil
 }
 
 func main() {
