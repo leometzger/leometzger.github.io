@@ -141,6 +141,16 @@ Depois de criar o **Dockerfile**, precisamos fazer build da imagem.
 docker build . -t verdaccio-with-s3
 ```
 
+## Alteraçõees ############################3
+
+### Fazer diagrama de como vai ficar
+
+### Falar sobre repositório terraform github
+
+### Como fazer o deploy com terraform
+
+### Como testar a implementação
+
 #### Deploy da imagem para o ECR
 
 Depois de ter criado a imagem, é necessário fazer o deploy
@@ -287,29 +297,6 @@ Tendo isso, o comando que registra a task é:
 
 ```sh
 aws ecs register-task-definition --cli-input-yaml file://ecs-task.yaml
-```
-
-#### Criando o serviço do verdaccio usando a task
-
-Criar security group...
-
-```
-
-```
-
-```yaml
-cluster: "verdaccio-cluster"
-serviceName: "verdaccio-service"
-taskDefinition: "verdaccio-service-task"
-desiredCount: 1
-launchType: FARGATE
-networkConfiguration: # The network configuration for the service.
-  awsvpcConfiguration: # The VPC subnets and security groups that are associated with a task.
-    subnets: # [REQUIRED] The IDs of the subnets associated with the task or service.
-      - ""
-    securityGroups: # The IDs of the security groups associated with the task or service.
-      - ""
-    assignPublicIp: ENABLED
 ```
 
 ## Utilizando o registry privado
