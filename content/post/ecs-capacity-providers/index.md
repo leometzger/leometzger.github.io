@@ -1,6 +1,6 @@
 ---
 title: ECS Capacity Providers
-description: Conheça os capacity providers e aprenda o que é possível fazer com eles
+description: Conheça os Capacity Providers e aprenda o que é possível fazer com eles.
 slug: ecs-capacity-providers
 date: 2022-12-10 00:00:00+0000
 draft: false

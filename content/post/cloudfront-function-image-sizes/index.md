@@ -1,6 +1,6 @@
 ---
 title: Como otimizar a entrega de imagens usando CloudFront Functions
-description: Aprenda como entregar imagens mais otimizadas para os dispositivos do usuário utilizando CloudFront Functions
+description: Aprenda como entregar imagens mais otimizadas para os dispositivos dos usuários utilizando CloudFront Functions.
 slug: cloudfront-function-image-sizes
 date: 2022-12-16 00:00:00+0000
 draft: false

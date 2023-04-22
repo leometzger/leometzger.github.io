@@ -1,6 +1,6 @@
 ---
-title: Funcionamento e utilização do Kinesis Data Stream
-description: O que é e quais são as maneiras de utilizar AWS Kinesis Data Streams
+title: Funcionamento e utilização do Kinesis Data Streams
+description: Qual é e quais são as maneiras de utilizar o AWS Kinesis Data Streams?
 slug: using-kinesis
 date: 2023-04-22 00:00:00+0000
 draft: false

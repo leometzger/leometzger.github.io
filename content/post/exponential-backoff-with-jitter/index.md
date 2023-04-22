@@ -1,6 +1,6 @@
 ---
 title: Exponential Backoff com Jitter
-description: Entenda como funciona essa estratégia de retry e exemplos de onde utilizá-la
+description: Entenda como funciona essa estratégia de retry e exemplos de onde utilizá-la.
 slug: exponential-backoff-with-jitter
 date: 2022-12-08 00:00:00+0000
 draft: true
