@@ -1,6 +1,6 @@
 ---
 title: Bloom filters & Cuckoo filter
-description:
+description: Estrutura de dados probabilísticas e suas aplicações
 slug: data-structure-probabilistic-filters
 date: 2023-07-25 00:00:00+0000
 draft: false
@@ -14,8 +14,8 @@ tags:
 ---
 
 No desenvolvimento de software, muitas vezes nos deparamos com a necessidade de realizar buscas em listas de dados, variando desde pequenos arrays até
-grandes conjuntos de informações com alto custo computacional. Por vezes, precisamos apenas identificar a existência de
-um item em um conjunto de dados, o que pode ser computacionalmente custoso. Neste post, apresentaremos duas estruturas de dados que podem
+grandes conjuntos de informações com alto custo computacional. Por vezes, **precisamos apenas identificar a existência de
+um item em um conjunto de dados**, o que pode ser computacionalmente custoso. Neste post, irei mostrar duas estruturas de dados que podem
 solucionar esse problema de forma eficiente.
 
 ## Introdução
@@ -109,8 +109,8 @@ Alguns lugares em que elas já são aplicadas são os seguintes:
 ## Conclusão
 
 As estruturas de dados probabilísticas representam um conhecimento fundamental para os desenvolvedores.
-O Bloom Filter e o Cuckoo Filter são exemplos de estruturas que podem resolver problemas complexos ao lidar com grandes
-volumes de dados. Vale a pena conhecer essas ferramentas e explorar suas aplicações em projetos de software.
+O Bloom Filter e o Cuckoo Filter são exemplos de estruturas que podem resolver problemas complexos
+que envolvam dados e performance. Vale a pena conhecer essas ferramentas e explorar suas aplicações em projetos de software.
 
 ### Referências
 
