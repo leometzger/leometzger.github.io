@@ -7,7 +7,7 @@ draft: false
 comments: false
 image: cover.webp
 categories:
-  - Algoritmos e Estrutura de dados
+  - cs
 tags:
   - Algorithms
   - Data structures
