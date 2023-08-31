@@ -1,3 +1,20 @@
+// custom theme
+
+:root {
+	--shadow-l1: 0px 1px 4px rgba(0, 0, 0, 0.01);
+	--shadow-l2: 0px 1px 4px rgba(0, 0, 0, 0.01);
+	--shadow-l3: 0px 1px 4px rgba(0, 0, 0, 0.01);
+	--shadow-l4: 0px 1px 4px rgba(0, 0, 0, 0.01);
+
+	&[data-scheme="dark"] {
+		--body-background: #000;
+		--card-background: #333;
+	}
+}
+
+
+// code
+
 html {
 	font-size: 9px;
 }
